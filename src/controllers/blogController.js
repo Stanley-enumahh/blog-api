@@ -65,7 +65,7 @@ const createBlog = async (req, res) => {
   }
 };
 
-const deleteBlog = async (re, res) => {
+const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findByIdAndDelete(req.params.id);
 
@@ -85,23 +85,26 @@ const deleteBlog = async (re, res) => {
 
 const updateBlog = async (req, res) => {
   try {
-    const blog = await Blog.findByIdAndDelete(req.params.id, req.body, {
+    const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
     if (!blog) {
-      return res
-        .status(404)
-        .json({ message: "blog with this id does not exist" });
+      return res.status(404).json({
+        message: "Blog with this id does not exist",
+      });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Post updated successfully",
       data: blog,
     });
-  } catch (e) {
-    res.status(500).json({ message: "error updating blogs" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating blog",
+      error: error.message,
+    });
   }
 };
 
@@ -115,6 +118,10 @@ const getHighRatedPosts = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+
+    const totalBlogs = await Blog.countDocuments({
+      rating: { $gt: 3 },
+    });
 
     res.status(200).json({
       blogs,
